@@ -18,5 +18,10 @@ switch(dataset_to_use,
          fig_path <- "figures/web/excl_known_automata"
          fig_subtitle <- "Search queries made on the web, excluding known automata"
          data_root <- "data"
+       },
+       "web_excl-known-automata_with_logs.rds" = {
+         fig_path <- "figures/web/excl_known_automata_with_logs"
+         fig_subtitle <- "Search queries made on the web, excluding known automata"
+         data_root <- "data"
        })
 if (!dir.exists(fig_path)) dir.create(fig_path, recursive = TRUE)

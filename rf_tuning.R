@@ -20,7 +20,7 @@ standardize <- function(x) { return((x - mean(x))/sd(x)) }
 
 set.seed(777)
 
-mtry_max <- 48
+mtry_max <- 28
 n_train <- 20000
 n_repeat <- 100
 train_idx <- matrix(sample.int(nrow(queries), size = n_train*n_repeat, replace = FALSE), ncol=n_repeat)

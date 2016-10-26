@@ -22,12 +22,12 @@ queries_subset[, "n_terms"] <- standardize(log10(queries_subset[, "n_terms"] + 1
 queries_subset[, "n_chars"] <- standardize(log10(queries_subset[, "n_chars"] + 1))
 queries_subset[, "n_feats"] <- standardize(sqrt(queries_subset[, "n_feats"]))
 temp <- cbind(queries_subset, as.matrix(features_matrix))
-library(Matrix)
-temp <- as(temp, "sparseMatrix") #print(temp[1:100,], col.names=T)
-language <- sparse.model.matrix(~language-1,data=queries)
-temp <- cBind(temp, language)
+# library(Matrix)
+# temp <- as(temp, "sparseMatrix") #print(temp[1:100,], col.names=T)
+# language <- sparse.model.matrix(~language-1,data=queries)
+# temp <- cBind(temp, language)
 rm(queries_subset, queries, features_matrix, language)
-temp <- as.matrix(temp)
+# temp <- as.matrix(temp)
 
 training_idx <- sample.int(nrow(temp), floor(0.8 * nrow(temp)), replace = FALSE)
 test_idx <- setdiff(1:nrow(temp), training_idx)
@@ -46,7 +46,7 @@ rf <- foreach(ntree = rep(125, 4), .combine = combine, .multicombine = TRUE, .ma
   randomForest(x = x_train, xtest = x_test, y = y_train, ytest = y_test,
                samplesize = 2800000, nodesize = 99, mtry = 33, ntree = ntree,
                importance = TRUE, keep.forest = TRUE, proximity = FALSE)
-save(rf, file = "random_forest.RData")
+# save(rf, file = "random_forest.RData")
 
 #system("scp chelsyx@stat3:~/random_forest.RData .")
 load("random_forest.RData") 
