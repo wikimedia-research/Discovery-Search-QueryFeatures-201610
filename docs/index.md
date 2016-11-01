@@ -39,7 +39,7 @@ In this analysis, we use three search performance measures as our target variabl
 
 We used random forest and generalized linear model with elasticnet penalty to investigate the relationship between query features and search performance metrics. Random forest is an ensemble classification algorithm, which is known to be good at dealing with high dimensional large dataset with many categorical features, and is less prone to overfitting. It also enable us to assess how important certain features are (through various variable importance measures) in classification. To compare with random forest, and to assess the magnitude and direction of a feature's impact, we also use logistic regression on predicting zero result and clickthrough, and linear regression on predicting paulscore. We use the elasticnet regularization when fitting generalized linear model, which allows for learning a sparse model where few of the weights are non-zero like Lasso, while still maintaining the regularization properties of Ridge. 10 fold cross validation is performed to get the penalty parameter.
 
-For the two classification problem -- predicting zero result and clickthrough, both algorithms classify almost all data points into a single class because of the imbalanced data. To solve this problem, we deleted instances from the over-represented class (down-sampling for logistic regression and stratified sampling for random forest) for training set, and use multiple metrics to measure model performance: accuracy, confusion matrix and area under ROC curve (AUC). Although down-sampling decrease the overall accuracy of test set, we got a relative balanced class error rate and higher AUC. It is worth noted that in this analysis, instead of prediction, our goal is to figure out the feature importance for zero result and zero click, so that we can work on those features to improve our search services. Hence, the cost of wrongly classify some results (clickthrough) as zero result (zero click) is less than the cost of wrongly classify zero result (zero click) as some results (clickthrough), and we should pay more attention to the accuracy of zero result and zero click, instead of the overall accuracy.
+For the two classification problem -- predicting zero result and clickthrough, both algorithms classify almost all data points into a single class because of the imbalanced data. To solve this problem, we performed down-sampling (deleted instances from the over-represented class) for logistic regression and stratified sampling for random forest for the training set, and use multiple metrics to measure model performance: accuracy, confusion matrix and area under ROC curve (AUC). Although down-sampling decrease the overall accuracy of test set, we got a relative balanced class error rate and higher AUC. It is worth noted that in this analysis, instead of prediction, our goal is to figure out the feature importance for zero result and zero click, so that we can work on those features to improve our search services. Hence, the cost of wrongly classify some results (clickthrough) as zero result (zero click) is less than the cost of wrongly classify zero result (zero click) as some results (clickthrough), and we should pay more attention to the accuracy of zero result and zero click, instead of the overall accuracy.
 
 For random forest, we use the Mean Decrease Gini (MDI) and Mean Decrease Accuracy (MDA) to find the features which have the most impact on classification. MDA works such that if a variable $X_j$ is associated to response $Y$, then randomly permuting its values should result in a substantial decrease in the accuracy of the classification. Gini importance measures the average gain of purity by splits of a given variable. If the variable is useful, it tends to split mixed labeled nodes into pure single class nodes. Splitting by a permuted variables tend neither to increase nor decrease node purities. Permuting a useful variable, tend to give relatively large decrease in mean gini-gain.
 
@@ -53,16 +53,19 @@ The design matrix consists of 21 dummy query features and 3 standardized continu
 <br/>
 
 ![](index_files/figure-html/zrr_by_feature.png)
+
 *Zero results rate by extracted features.*
 
 <br/>
 
 ![](index_files/figure-html/ctr_by_feature.png)
+
 *Clickthrough rate by extracted features.*
 
 <br/>
 
 ![](index_files/figure-html/paulscore_by_feature.png)
+
 *Mean PaulScore by extracted features. Scoring factors are 0.1, 0.5 and 0.9 respectively.*
 
 ### Zero Result Rate
@@ -77,6 +80,7 @@ The design matrix consists of 21 dummy query features and 3 standardized continu
 The following variable importance plot shows that "has even double quotes" and "is only punctuation and spaces" are more important than others when predicting zero result. 
 
 ![](index_files/figure-html/var_imp_zrr.png)
+
 *(a) Variable importance according to mean decrease in accuracy (increase in prediction error after permuting values of the predictor) specific to zero results queries. (b) Variable importance according to mean decrease in impurity, using Gini index. (c) Variable importance according to mean decrease in accuracy over both classes of queries (zero results and some results).*
 
 **Logistic Regression: ** The two tuned parameter of elasticnet penalty are very closed to 0, which means logistic regression without penalty works best here. Overall accuracy of test set is 0.6946972, AUC is 0.6726. The confusion matrix is:
@@ -89,6 +93,7 @@ The following variable importance plot shows that "has even double quotes" and "
 The figure below compares the features using the measures from both models to reveal which features the two models agree on. As before, we should pay more attention to MDA specific to queries with zero results. We can see that "has even double quotes" and "is only punctuation and spaces" are relatively more important and make zero result more likely.
 
 ![](index_files/figure-html/mda_logitcoef_zrr.png)
+
 *A scatter map of features with respect to variable importance (via relative mean decrease metrics) and logistic regression coefficient estimates. Each of the 4 plots is divided into quadrants according to how important or unimportant the feature is in random forest classification and whether a query having the feature is more or less likely to yield zero results.*
 
 ### Clickthrough Rate
@@ -107,11 +112,11 @@ The figure below compares the features using the measures from both models to re
 | zero click   | 35255      | 50640        | 0.589557    |
 | clickthrough | 15594      | 25911        | 0.3757138   |
 
-Because AUC is very closed to 0.5, and the class error for zero click is too large, we don't think query features have large enough predicting power on clickthrough rate and thus not reporting variable importance here (see appendix below).
+Because AUC is too closed to 0.5, and the class error for zero click is too large, we don't think query features have large enough predicting power on clickthrough rate and thus not reporting variable importance here (see appendix below).
 
 ### PaulScore
 
-We fit linear regression models (lambda of elasticnet penalty is very closed to 0) for PaulScore when scoring factor equals 0,1, 0.5 and 0.9. The explained deviance by models are very small, less than 0.3%, and R squared ranges from 0.005 to 0.009. Therefore, we don't think query features have large enough predicting power on PaulScore and thus not reporting variable importance here.
+**Linear Regression: ** We fit linear regression models (lambda of elasticnet penalty is very closed to 0) for PaulScore when scoring factor equals 0,1, 0.5 and 0.9. The explained deviance by models are very small, less than 0.3%, and R squared ranges from 0.005 to 0.009. Therefore, we don't think query features have large enough predicting power on PaulScore and thus not reporting variable importance here.
 
 ## Appendix
 

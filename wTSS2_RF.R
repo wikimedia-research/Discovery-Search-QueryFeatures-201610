@@ -157,6 +157,7 @@ pred_prob <- predict(rf, x_test, type = "prob")[,2]; auc(y_test, pred_prob)#0.54
 # Paul Score
 ######
 set.seed(777)
+standardize <- function(x) { return((x - mean(x))/sd(x)) }
 
 clk_mask <- searches$clickthrough
 searches_subset <- apply(as.matrix(searches[clk_mask, .(`Query score (F=0.1)`, `Query score (F=0.5)`, `Query score (F=0.9)`, n_terms, n_chars, n_feats)]),2,as.numeric)
@@ -166,7 +167,7 @@ searches_subset[, "n_feats"] <- standardize(sqrt(searches_subset[, "n_feats"]))
 temp <- cbind(searches_subset, as.matrix(features_matrix[clk_mask,]))
 rm(searches_subset)
 
-training_idx <- sample.int(nrow(temp), floor(0.01 * nrow(temp)), replace = FALSE)
+training_idx <- sample.int(nrow(temp), floor(0.1 * nrow(temp)), replace = FALSE)
 test_idx <- setdiff(1:nrow(temp), training_idx)
 x_train <- temp[training_idx, -c(1:3)]; x_test <- temp[test_idx, -c(1:3)]
 y1_train <- standardize(temp[training_idx, 1]); y5_train <- standardize(temp[training_idx, 2]); y9_train <- standardize(temp[training_idx, 3]); 
@@ -174,28 +175,25 @@ y1_test <- standardize(temp[test_idx, 1]); y5_test <- standardize(temp[test_idx,
 rm(temp)
 
 ### Tuning RF
-mtry_max <- 2
-#mtry_max <- dim(x_train)[2]
-n_folds <- 3
+mtry_max <- dim(x_train)[2]
+n_folds <- 10
 fold_ind <- sample.int(n_folds, length(training_idx), replace = T)
 
 cl <- makeCluster(mc <- getOption("cl.cores", 4))
-clusterExport(cl, list("fold_ind","n_folds","x_train","y1_train", "mtry_max"))
+clusterExport(cl, list("fold_ind","n_folds","x_train","y9_train", "mtry_max"))
 tuning_set <- parSapply(cl, 1:n_folds, function(this_fold){
   library(randomForest)
   # Tuning mtry
-  auc_rf <- sapply(1:mtry_max, function(m){
+  mse_rf <- sapply(1:mtry_max, function(m){
     rf <- randomForest(x = x_train[fold_ind!=this_fold, ], 
-                       y = y1_train[fold_ind!=this_fold],
+                       y = y9_train[fold_ind!=this_fold],
+                       xtest = x_train[fold_ind==this_fold, ], 
+                       ytest = y9_train[fold_ind==this_fold],
                        nodesize = 10, mtry = m, 
-                       sampsize=rep(min(table(y1_train[fold_ind!=this_fold])),2), 
-                       strata=y1_train[fold_ind!=this_fold], 
                        importance = FALSE, keep.forest = T, proximity = FALSE)
-    pred_prob <- predict(rf, x_train[fold_ind==this_fold, ], type = "prob")[,2]
-    library(pROC)
-    return(as.numeric(auc(y1_train[fold_ind==this_fold], pred_prob)))
+    return(mean(rf$test$mse))
   })
-  return(auc_rf)
+  return(mse_rf)
 })
 stopCluster(cl)
 
@@ -205,10 +203,22 @@ tuning_result <- data.frame(mtry=1:mtry_max,
                             lower = apply(tuning_set, 1, function(x) unname(quantile(x, 0.025))),
                             upper = apply(tuning_set, 1, function(x) unname(quantile(x, 0.975))))
 
-print(tuning_result$mtry[which.max(tuning_result$point.est)])
-print(max(tuning_result$point.est))
+print(tuning_result$mtry[which.min(tuning_result$point.est)])
+print(min(tuning_result$point.est))
+# F=0.1: mtry= ; mse = 
+# F=0.5: mtry= ; mse = 
+# F=0.9: mtry= ; mse = 
 
-
+# Train RF with tuned mtry:
+set.seed(777)
+rf <- randomForest(x = x_train, xtest = x_test, y = y1_train, ytest = y1_test,
+                   mtry = 9, ntree = 500, nodesize = 10, 
+                   importance = TRUE, keep.forest = TRUE, proximity = FALSE)
+# save(rf, file = "random_forest_ps.RData")
+# plot
+# MSE, R squared
+rf$test$mse
+rf$test$rsq
 
 if(FALSE){
   # Tuning RF
