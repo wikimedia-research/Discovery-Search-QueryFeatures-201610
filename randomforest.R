@@ -48,22 +48,21 @@ rf <- foreach(ntree = rep(125, 4), .combine = combine, .multicombine = TRUE, .ma
                importance = TRUE, keep.forest = TRUE, proximity = FALSE)
 # save(rf, file = "random_forest.RData")
 
-#system("scp chelsyx@stat3:~/random_forest.RData .")
-load("random_forest.RData") 
-import::from(dplyr, keep_where = filter)
+#system("scp chelsyx@stat2:~/random_forest_ctr.RData results/")
+load("results/random_forest_ctr.RData") 
 variable_importance <- data.frame(Variable = rownames(importance(rf)), importance(rf)) %>%
   set_rownames(NULL)
-p1 <- ggplot(data = keep_where(variable_importance, abs(zero.results) > 1),
-             aes(x = reorder(Variable, -zero.results),
-                 y = zero.results)) +
-  geom_bar(stat = "identity", aes(fill = ifelse(zero.results >= 0, "Higher", "Lower"))) +
+p1 <- ggplot(data = keep_where(variable_importance, abs(No.Click) > 1),
+             aes(x = reorder(Variable, -No.Click),
+                 y = No.Click)) +
+  geom_bar(stat = "identity", aes(fill = ifelse(No.Click >= 0, "Higher", "Lower"))) +
   scale_fill_manual(values = RColorBrewer::brewer.pal(3, "Set1")[2:1],
-                    guide = guide_legend(title = "Chances of zero results")) +
+                    guide = guide_legend(title = "Chances of Zero Click")) +
   geom_hline(yintercept = 0) +
   coord_flip() +
   ggthemes::theme_tufte(base_family = "Gill Sans", base_size = 16) +
   labs(x = "Variable", y = "Mean Importance", subtitle = fig_subtitle,
-       title = "(a) Importance of features in predicting zero results.") +
+       title = "(a) Importance of features in predicting zero click.") +
   theme(legend.position = "bottom")
 p2 <- ggplot(data = keep_where(variable_importance, abs(MeanDecreaseGini) > 1),
              aes(x = reorder(Variable, -MeanDecreaseGini),
@@ -87,7 +86,7 @@ p3 <- ggplot(data = keep_where(variable_importance, abs(MeanDecreaseAccuracy) > 
   theme(legend.position = "bottom")
 p <- plot_grid(p1, p2, p3, nrow = 1)
 print(p)
-ggsave("var_imp.png", p, path = fig_path, units = "in", dpi = 300, height = 8, width = 24)
+ggsave("var_imp_ctr.png", p, path = fig_path, units = "in", dpi = 300, height = 8, width = 24)
 
 ################################################
 
@@ -124,3 +123,8 @@ rf <- randomForest(x = temp[training_idx, -1], xtest = temp[test_idx, -1],
 
 # plot(rf); varImpPlot(rf); par(mfrow = c(1, 1))
 # MDSplot(rf, fac = factor(temp[test_idx, 1], 0:1, c("some results", "zero results")))
+
+library(caret)
+confusionMatrix(data = factor(predictions > 0.5, c(FALSE, TRUE), c("some results", "zero results")),
+                reference = factor(temp[validation_idx, 1], 0:1, c("some results", "zero results")),
+                positive = "zero results")

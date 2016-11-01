@@ -1,10 +1,14 @@
+events <- events[!duplicated(events$event_id),]
+queries <- queries[!duplicated(queries),]
+queries <- queries[queries$features!="NULL",]
+
 queries <- queries[queries$ip!="164.132.183.164", , ]
 lang_proj <- polloi::parse_wikiid(queries$wikiid)
 inactive_lang <- names(table(lang_proj$language))[table(lang_proj$language) <= 50]
 inactive_proj <- names(table(lang_proj$project))[table(lang_proj$project) <= 50]
 queries <- cbind(queries, lang_proj)
-queries <- queries[!is.na(queries$project), , ] %>% mutate(language = ifelse(language %in% inactive_lang|is.na(language), "Other", language), 
-                                                           project = ifelse(project %in% inactive_proj, "Other", project)) %>% as.data.table()
+queries <- queries %>% mutate(language = ifelse(language %in% inactive_lang|is.na(language), "Other", language), 
+                                                           project = ifelse(project %in% inactive_proj|is.na(queries$project), "Other", project)) %>% as.data.table()
 rm(lang_proj,inactive_lang,inactive_proj)
 queries <- queries %>% rename(cirrus_id = event_logs.cirrus_id)
 
@@ -15,7 +19,7 @@ events_queries <- events_queries %>% filter(!(action=="SERP" & is.na(features)))
 # Start by assigning the same page_id to different SERPs that have exactly the same query:
 temp <- events_queries %>%
   filter(action == "SERP") %>%
-  group_by(session_id, search_id, query) %>%
+  group_by(session_id, search_id, query, n_chars, features) %>%
   mutate(new_page_id = min(page_id)) %>%
   ungroup %>%
   select(c(page_id, new_page_id)) %>%
@@ -53,7 +57,6 @@ searches <- events_queries %>%
   filter("SERP" %in% action) %>% # filter out searches where we have clicks but not SERP events
   summarize(ts = ts[1], query = query[1], identity = identity[1], country = country[1], n_terms=n_terms[1], query_type=query_type[1],
             n_chars=n_chars[1], n_feats=n_feats[1], features=features[1], language=language[1], project=project[1], zero_result=zero_result[1],
-            results = ifelse(n_results_returned[1] > 0, "some", "zero"),
             clickthrough = "click" %in% action,
             `first clicked result's position` = ifelse(clickthrough, position_clicked[2], NA),
             `result page IDs` = result_pids[1],
@@ -61,6 +64,7 @@ searches <- events_queries %>%
             `Query score (F=0.5)` = query_score(position_clicked, 0.5),
             `Query score (F=0.9)` = query_score(position_clicked, 0.9)) %>%
   arrange(ts) %>% ungroup() %>% as.data.table()
+# save(searches, file="data/searches.RData")
 
 ## feature matrix
 if (file.exists(file.path(data_root, paste0("features-matrix_", dataset_to_use)))) {

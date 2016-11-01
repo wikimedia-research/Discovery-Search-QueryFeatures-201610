@@ -11,9 +11,7 @@ library(cowplot)
 
 dataset_to_use <- "web_excl-known-automata.rds"
 source("config.R")
-queries <- readr::read_rds(file.path(data_root, dataset_to_use))
 # queries <- readr::read_rds("web_excl-known-automata_refined.rds")
-source("refine.R") # yields: features_matrix
 # features_matrix <- readr::read_rds("features-matrix_web_excl-known-automata.rds")
 
 standardize <- function(x) { return((x - mean(x))/sd(x)) }
