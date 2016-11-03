@@ -16,8 +16,8 @@ variable_importance <- data.frame(Variable = rownames(importance(rf)), importanc
 temp <- dplyr::left_join(variable_importance, logit_coefs, by = "Variable")
 
 annotations <- data.frame(
-  xpos = c(-2.49,-2.49,2.49,2.49),
-  ypos =  c(-2.99, 5.99,-2.99, 5.99),
+  xpos = c(-0.8,-0.8,1.1,1.1),
+  ypos =  c(-2.5, 3,-2.5, 3),
   hjustvar = c(0,0,1,1),
   vjustvar = c(0,1,0,1),
   feature = c("less important\nzero results less likely",
@@ -43,9 +43,9 @@ p <- temp %>%
                 feature = paste(lbl.a, lbl.b, sep = "\n")) %>%
   ggplot(aes(x = var.imp, y = Coefficient)) +
   geom_point(aes(color = feature)) +
-  geom_text_repel(aes(label = Variable), nudge_y = 0.5) +
+  geom_text_repel(aes(label = Variable), force=10) +
   scale_color_brewer(type = "qual", palette = "Set1", guide = guide_legend(nrow = 1)) +
-  scale_y_continuous(limits = c(-3, 6)) + scale_x_continuous(limits = c(-2.5, 2.5)) +
+  scale_y_continuous(limits = c(-2.5, 3)) + scale_x_continuous(limits = c(-0.8, 1.1)) +
   facet_wrap(~metric, nrow = 2) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   geom_vline(xintercept = 0, linetype = "dashed") +
@@ -72,8 +72,8 @@ variable_importance <- data.frame(Variable = rownames(importance(rf)), importanc
 temp <- dplyr::left_join(variable_importance, logit_coefs, by = "Variable")
 
 annotations <- data.frame(
-  xpos = c(-2.49,-2.49,2.49,2.49),
-  ypos =  c(-1.99, 1.99,-1.99, 1.99),
+  xpos = c(-1.8,-1.8,1.1,1.1),
+  ypos =  c(-1.3, 0.4,-1.3, 0.4),
   hjustvar = c(0,0,1,1),
   vjustvar = c(0,1,0,1),
   feature = c("less important\nclickthrough less likely",
@@ -99,9 +99,9 @@ p <- temp %>%
                 feature = paste(lbl.a, lbl.b, sep = "\n")) %>%
   ggplot(aes(x = var.imp, y = Coefficient)) +
   geom_point(aes(color = feature)) +
-  geom_text_repel(aes(label = Variable), nudge_y = 0.5) +
+  geom_text_repel(aes(label = Variable), force =10) +
   scale_color_brewer(type = "qual", palette = "Set1", guide = guide_legend(nrow = 1)) +
-  scale_y_continuous(limits = c(-2, 2)) + scale_x_continuous(limits = c(-2.5, 2.5)) +
+  scale_y_continuous(limits = c(-1.3, 0.4)) + scale_x_continuous(limits = c(-1.8, 1.1)) +
   facet_wrap(~metric, nrow = 2) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   geom_vline(xintercept = 0, linetype = "dashed") +

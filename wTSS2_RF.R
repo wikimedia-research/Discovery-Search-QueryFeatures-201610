@@ -167,7 +167,7 @@ searches_subset[, "n_feats"] <- standardize(sqrt(searches_subset[, "n_feats"]))
 temp <- cbind(searches_subset, as.matrix(features_matrix[clk_mask,]))
 rm(searches_subset)
 
-training_idx <- sample.int(nrow(temp), floor(0.1 * nrow(temp)), replace = FALSE)
+training_idx <- sample.int(nrow(temp), floor(0.8 * nrow(temp)), replace = FALSE)
 test_idx <- setdiff(1:nrow(temp), training_idx)
 x_train <- temp[training_idx, -c(1:3)]; x_test <- temp[test_idx, -c(1:3)]
 y1_train <- standardize(temp[training_idx, 1]); y5_train <- standardize(temp[training_idx, 2]); y9_train <- standardize(temp[training_idx, 3]); 
@@ -179,7 +179,7 @@ mtry_max <- dim(x_train)[2]
 n_folds <- 10
 fold_ind <- sample.int(n_folds, length(training_idx), replace = T)
 
-cl <- makeCluster(mc <- getOption("cl.cores", 4))
+cl <- makeCluster(mc <- getOption("cl.cores", 10))
 clusterExport(cl, list("fold_ind","n_folds","x_train","y9_train", "mtry_max"))
 tuning_set <- parSapply(cl, 1:n_folds, function(this_fold){
   library(randomForest)
@@ -205,20 +205,20 @@ tuning_result <- data.frame(mtry=1:mtry_max,
 
 print(tuning_result$mtry[which.min(tuning_result$point.est)])
 print(min(tuning_result$point.est))
-# F=0.1: mtry= ; mse = 
-# F=0.5: mtry= ; mse = 
-# F=0.9: mtry= ; mse = 
+# F=0.1: mtry=8 ; mse = 0.9869469
+# F=0.5: mtry=8 ; mse = 0.9897359
+# F=0.9: mtry=4 ; mse = 0.9981672
 
 # Train RF with tuned mtry:
 set.seed(777)
-rf <- randomForest(x = x_train, xtest = x_test, y = y1_train, ytest = y1_test,
-                   mtry = 9, ntree = 500, nodesize = 10, 
+rf <- randomForest(x = x_train, xtest = x_test, y = y9_train, ytest = y9_test,
+                   mtry = 4, ntree = 500, nodesize = 10, 
                    importance = TRUE, keep.forest = TRUE, proximity = FALSE)
 # save(rf, file = "random_forest_ps.RData")
 # plot
 # MSE, R squared
-rf$test$mse
-rf$test$rsq
+mean(rf$test$mse) #0.1: 0.9860; 0.5: 0.9888049; 0.9: 0.9987361
+mean(rf$test$rsq) #0.1: 0.01403; 0.5: 0.01118911; 0.9: 0.00125791
 
 if(FALSE){
   # Tuning RF

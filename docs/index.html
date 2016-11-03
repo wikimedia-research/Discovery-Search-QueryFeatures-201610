@@ -12,20 +12,21 @@
 <meta name="author" content="Chelsy Xie (Analysis &amp; Report)" />
 <meta name="author" content="Deb Tankersley (Product Management)" />
 <meta name="author" content="Mikhail Popov (Review)" />
+<meta name="author" content="Erik Bernhardson (Review)" />
 
-<meta name="date" content="2016-11-01" />
+<meta name="date" content="2016-11-03" />
 
 <title>Query Features and Search Performance</title>
 
 <script src="index_files/jquery-1.11.3/jquery.min.js"></script>
-<script src="index_files/jqueryui-1.11.4/jquery-ui.min.js"></script>
-<link href="index_files/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
-<script src="index_files/tocify-1.9.1/jquery.tocify.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="index_files/bootstrap-3.3.5/css/flatly.min.css" rel="stylesheet" />
 <script src="index_files/bootstrap-3.3.5/js/bootstrap.min.js"></script>
 <script src="index_files/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
 <script src="index_files/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="index_files/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="index_files/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="index_files/tocify-1.9.1/jquery.tocify.js"></script>
 
 
 
@@ -84,6 +85,7 @@ button.code-folding-btn:focus {
   outline: none;
 }
 </style>
+
 
 
 <div class="container-fluid main-container">
@@ -209,15 +211,18 @@ div.tocify {
 
 
 <h1 class="title toc-ignore">Query Features and Search Performance</h1>
+<h3 class="subtitle"><em>Second Draft</em></h3>
 <h4 class="author"><em><a href = 'https://meta.wikimedia.org/wiki/User:CXie_(WMF)'>Chelsy Xie</a> (Analysis &amp; Report)</em></h4>
 <h4 class="author"><em><a href = 'https://meta.wikimedia.org/wiki/User:DTankersley_(WMF)'>Deb Tankersley</a> (Product Management)</em></h4>
 <h4 class="author"><em><a href = 'https://meta.wikimedia.org/wiki/User:MPopov_(WMF)'>Mikhail Popov</a> (Review)</em></h4>
-<h4 class="date"><em>01 November 2016</em></h4>
+<h4 class="author"><em><a href = 'https://meta.wikimedia.org/wiki/User:EBernhardson_(WMF)'>Erik Bernhardson</a> (Review)</em></h4>
+<h4 class="date"><em>03 November 2016</em></h4>
 
 </div>
 
 
-<script language="JavaScript">
+<!-- See: http://rmarkdown.rstudio.com/authoring_knitr_engines.html#javascript -->
+<script type="text/javascript">
 $(function() {
   /* Lets the user click on the images to view them in full resolution. */
   $("div.figure img").wrap(function() {
@@ -234,22 +239,22 @@ $(function() {
 </p>
 <div id="executive-summary" class="section level2">
 <h2>Executive Summary</h2>
-<p>Zero Result Rate (ZRR) – the proportion of searches that yield zero results – is a metric to measure the performance of our search system. In May 2016, we performed an analysis on zero result rate and query features using random forest and logistic regression model, which lead to the stripping of question marks from queries. We want see which features float up to the top now after eliminating the question mark. Furthermore, We also join test search satisfaction data (TSS2) with the search logs, and investigate the relationship between query features and other search performance metrics: clickthrough rate and paul score.</p>
-<p>We used random forest and generalized linear model with elasticnet penalty to shed light on the relationship between query features and search performance metrics. For ZRR, we found that whether the query has even double quotes, and whether it is only punctuation and spaces are more important than other features when predicting zero result. For clickthrough rate and paul score, we found that query features have very small predicting power.</p>
+<p>Zero results rate (ZRR) – the proportion of searches that yield zero results – is a metric to measure the performance of our search system. In May 2016, we performed an analysis on zero result rate and query features using random forest and logistic regression model. This lead to us identifying question marks as the most important predictor of whether a query will yield zero results and lead to <a href="https://blog.wikimedia.org/2016/08/11/question-marks-search/">us stripping question marks from queries</a>. With this analysis, we wanted to see which features float up to the top now after eliminating the question mark. Furthermore, we also joined search satisfaction event logging data with our Cirrus search logs to investigate the relationship between query features and other search performance metrics: clickthrough rate and PaulScore.</p>
+<p>We used random forest and generalized linear model with elastic net penalty to shed light on the relationship between query features and search performance metrics. For ZRR, we found that whether the query has even double quotes, and whether it is only punctuation and spaces are more important than other features when predicting zero results. For clickthrough rate and PaulScore, we found that query features have very small predicting power.</p>
 </div>
 <div id="data" class="section level2">
 <h2>Data</h2>
-<p>A user has a 1 in 66 chance of being selected for search satisfaction tracking according to our <a href="https://meta.wikimedia.org/w/index.php?title=Schema:TestSearchSatisfaction2&amp;oldid=15700292">TestSearchSatisfaction2 #15700292</a> schema. We extracted the full-text web searching event logging data excluding known automata from September 1st to October 23rd, and join with <a href="https://wikitech.wikimedia.org/wiki/Analytics/Data/Cirrus">CirrusSearchRequestSet</a>. See <a href="https://github.com/wikimedia-research/Discovery-Search-QueryFeatures-201610/blob/master/data_wTSS2.R">data_wTSS2.R</a> for more details.</p>
-<p>We used Hive user-defined function (UDF) for deconstructing search queries into various features. The UDF detects a variety of features such as: odd or even number of quotation marks, logical operators (e.g. AND, OR), “prefix:” or “insource:”, and wildcards. For a full list of features, please see <a href="https://phabricator.wikimedia.org/T118218">T118218</a> and <a href="https://git.wikimedia.org/blob/analytics%2Frefinery%2Fsource.git/master/refinery-core%2Fsrc%2Fmain%2Fjava%2Forg%2Fwikimedia%2Fanalytics%2Frefinery%2Fcore%2FSearchQuery.java">SearchQuery.java</a> and <a href="https://git.wikimedia.org/blob/analytics%2Frefinery%2Fsource.git/master/refinery-core%2Fsrc%2Fmain%2Fjava%2Forg%2Fwikimedia%2Fanalytics%2Frefinery%2Fcore%2FSearchQueryFeatureRegex.java">SearchQueryFeatureRegex.java</a> source code.</p>
+<p>A user has a 1 in 200 chance of being selected for search satisfaction tracking according to our <a href="https://meta.wikimedia.org/w/index.php?title=Schema:TestSearchSatisfaction2&amp;oldid=15700292">TestSearchSatisfaction2 #15700292</a> schema. We extracted the full-text web searching event logging data (excluding known automata) from September 1st to October 23rd, and joined with <a href="https://wikitech.wikimedia.org/wiki/Analytics/Data/Cirrus">CirrusSearchRequestSet</a>. See <a href="https://github.com/wikimedia-research/Discovery-Search-QueryFeatures-201610/blob/master/data_wTSS2.R">data_wTSS2.R</a> for more details.</p>
+<p>We used a user-defined function (UDF) for deconstructing search queries into various features in Hive. The UDF detects a variety of features such as: odd or even number of quotation marks, logical operators (e.g. AND, OR), “prefix:” or “insource:”, and wildcards. For a full list of features, please see <a href="https://phabricator.wikimedia.org/T118218">T118218</a> and <a href="https://git.wikimedia.org/blob/analytics%2Frefinery%2Fsource.git/master/refinery-core%2Fsrc%2Fmain%2Fjava%2Forg%2Fwikimedia%2Fanalytics%2Frefinery%2Fcore%2FSearchQuery.java">SearchQuery.java</a> and <a href="https://git.wikimedia.org/blob/analytics%2Frefinery%2Fsource.git/master/refinery-core%2Fsrc%2Fmain%2Fjava%2Forg%2Fwikimedia%2Fanalytics%2Frefinery%2Fcore%2FSearchQueryFeatureRegex.java">SearchQueryFeatureRegex.java</a> source code.</p>
 <p>An issue we noticed with the event logging is that when the user goes to the next page of search results or clicks the Back button after visiting a search result, a new page ID is generated for the search results page. The page ID is how we connect click events to search result page events. There is currently a Phabricator ticket (<a href="https://phabricator.wikimedia.org/T146337">T146337</a>) for addressing these issues. For this analysis, we de-duplicated by connecting search engine results page (SERP) events that have the exact same search query, and then connected click events together based on the SERP connectivity. After de-duplicating, we collapsed all SERP and click events into 734,140 searches. See <a href="https://github.com/wikimedia-research/Discovery-Search-QueryFeatures-201610/blob/master/refine_wTSS2.R">refine_wTSS2.R</a> for more details.</p>
-<p>In this analysis, we use three search performance measures as our target variables: zero results rate, clickthrough rate and paulscore. Zero results rate is the proportion of searches that yielded zero results (smaller is better). Clickthrough rate is the proportion of searches that has at least one click on SERP (bigger is better). PaulScore is a metric of search results’ relevancy that relies on the position of the clicked result[s] (bigger is better); see <a href="https://wikimedia-research.github.io/Discovery-Search-Test-BM25/#paulscore-definition">PaulScore Definition</a> for more details.</p>
+<p>In this analysis, we used three search performance measures as our target variables: zero results rate, clickthrough rate and PaulScore. Zero results rate (ZRR) is the proportion of searches that yielded zero results (smaller is better, up to a point). Clickthrough rate is the proportion of searches that has at least one click on SERP (bigger is better). PaulScore is a metric of search results’ relevancy that relies on the position of the clicked result[s] (bigger is better); see <a href="https://wikimedia-research.github.io/Discovery-Search-Test-BM25/#paulscore-definition">PaulScore Definition</a> for more details.</p>
 </div>
 <div id="methods" class="section level2">
 <h2>Methods</h2>
-<p>We used random forest and generalized linear model with elasticnet penalty to investigate the relationship between query features and search performance metrics. Random forest is an ensemble classification algorithm, which is known to be good at dealing with high dimensional large dataset with many categorical features, and is less prone to overfitting. It also enable us to assess how important certain features are (through various variable importance measures) in classification. To compare with random forest, and to assess the magnitude and direction of a feature’s impact, we also use logistic regression on predicting zero result and clickthrough, and linear regression on predicting paulscore. We use the elasticnet regularization when fitting generalized linear model, which allows for learning a sparse model where few of the weights are non-zero like Lasso, while still maintaining the regularization properties of Ridge. 10 fold cross validation is performed to get the penalty parameter.</p>
-<p>For the two classification problem – predicting zero result and clickthrough, both algorithms classify almost all data points into a single class because of the imbalanced data. To solve this problem, we performed down-sampling (deleted instances from the over-represented class) for logistic regression and stratified sampling for random forest for the training set, and use multiple metrics to measure model performance: accuracy, confusion matrix and area under ROC curve (AUC). Although down-sampling decrease the overall accuracy of test set, we got a relative balanced class error rate and higher AUC. It is worth noted that in this analysis, instead of prediction, our goal is to figure out the feature importance for zero result and zero click, so that we can work on those features to improve our search services. Hence, the cost of wrongly classify some results (clickthrough) as zero result (zero click) is less than the cost of wrongly classify zero result (zero click) as some results (clickthrough), and we should pay more attention to the accuracy of zero result and zero click, instead of the overall accuracy.</p>
+<p>We used <a href="https://en.wikipedia.org/wiki/Random_forest">random forest</a> and <a href="https://en.wikipedia.org/wiki/Generalized_linear_model">generalized linear model</a> (GLM) with <a href="https://en.wikipedia.org/wiki/Elastic_net_regularization">elastic net penalty</a> to investigate the relationship between query features and search performance metrics. Random forest is an <a href="https://en.wikipedia.org/wiki/Ensemble_learning">ensemble classification</a> algorithm, which is known to be good at dealing with high dimensional large dataset with many categorical features, and is less prone to overfitting. It also enables us <a href="https://en.wikipedia.org/wiki/Random_forest#Variable_importance">to assess how important certain features are</a> (through various variable importance measures) in classification. To compare with random forest, and to assess the magnitude and direction of a feature’s impact, we also use logistic regression on predicting zero result and clickthrough, and linear regression on predicting PaulScore. We use the elastic net regularization when fitting the GLM, which allows for learning a sparse model where few of the weights are non-zero – like Lasso – while still maintaining the regularization properties of Ridge. We employed <a href="https://en.wikipedia.org/wiki/Cross-validation_(statistics)#k-fold_cross-validation">10-fold cross validation</a> to find the optimal value of the penalty parameter.</p>
+<p>For the two classification problems – predicting zero result and clickthrough, both algorithms classify almost all data points into a single class because of the imbalanced data. To solve this problem, we performed down-sampling (deleted instances from the over-represented class) for logistic regression and stratified sampling for random forest for the training set, and use multiple metrics to measure model performance: accuracy, confusion matrix, and <a href="https://en.wikipedia.org/wiki/Receiver_operating_characteristic#Area_under_the_curve">area under ROC curve</a> (AUC). Although down-sampling decreases the overall accuracy of the test set, we obtained a relatively balanced class error rate and higher AUC. It is worth noting that in this analysis, instead of prediction, our goal is to figure out the feature importance for zero results and zero clicks, so that we can highlight some features for potential work and improvement. Hence, the cost of wrongly classifying some results (clickthrough) as zero result (zero click) is less than the cost of wrongly classify zero result (zero click) as some results (clickthrough), and we should pay more attention to the accuracy of zero result and zero click, instead of the overall accuracy.</p>
 <p>For random forest, we use the Mean Decrease Gini (MDI) and Mean Decrease Accuracy (MDA) to find the features which have the most impact on classification. MDA works such that if a variable <span class="math inline">\(X_j\)</span> is associated to response <span class="math inline">\(Y\)</span>, then randomly permuting its values should result in a substantial decrease in the accuracy of the classification. Gini importance measures the average gain of purity by splits of a given variable. If the variable is useful, it tends to split mixed labeled nodes into pure single class nodes. Splitting by a permuted variables tend neither to increase nor decrease node purities. Permuting a useful variable, tend to give relatively large decrease in mean gini-gain.</p>
-<p>The design matrix consists of 21 dummy query features and 3 standardized continuous variables (number of terms, number of characters, and number of features detected). We considered including language (parsed from wiki ID) as a predictor but early parameter tuning tests showed that a very small increase in prediction accuracy was not enough to offset the time it would take to train. A random 80% subset of the data was used to train the model and the rest 20% was used to test and measure the model performance.</p>
+<p>The design matrix consists of 21 dummy query features and 3 standardized continuous variables (number of terms, number of characters, and number of features detected). We considered including language (parsed from wiki ID) as a predictor but early parameter tuning tests showed that a very small increase in prediction accuracy was not enough to offset the time it would take to train. A random 80% subset of the data was used to train the model and the remaining 20% was used to test and measure the model performance.</p>
 </div>
 <div id="results" class="section level2">
 <h2>Results</h2>
@@ -257,87 +262,82 @@ $(function() {
 <h3>Exploratory Data Analysis</h3>
 <p><br/></p>
 <div class="figure">
-<img src="index_files/figure-html/zrr_by_feature.png" alt="" />
-
+<img src="index_files/figure-html/zrr_by_feature.png" alt="Figure 1: Zero results rate by extracted features." />
+<p class="caption"><strong>Figure 1</strong>: Zero results rate by extracted features.</p>
 </div>
-<p><em>Zero results rate by extracted features.</em></p>
 <p><br/></p>
 <div class="figure">
-<img src="index_files/figure-html/ctr_by_feature.png" alt="" />
-
+<img src="index_files/figure-html/ctr_by_feature.png" alt="Figure 2: Clickthrough rate by extracted features." />
+<p class="caption"><strong>Figure 2</strong>: Clickthrough rate by extracted features.</p>
 </div>
-<p><em>Clickthrough rate by extracted features.</em></p>
 <p><br/></p>
 <div class="figure">
-<img src="index_files/figure-html/paulscore_by_feature.png" alt="" />
-
+<img src="index_files/figure-html/paulscore_by_feature.png" alt="Figure 3: Mean PaulScore by extracted features. Scoring factors are 0.1, 0.5 and 0.9 respectively." />
+<p class="caption"><strong>Figure 3</strong>: Mean PaulScore by extracted features. Scoring factors are 0.1, 0.5 and 0.9 respectively.</p>
 </div>
-<p><em>Mean PaulScore by extracted features. Scoring factors are 0.1, 0.5 and 0.9 respectively.</em></p>
 </div>
 <div id="zero-result-rate" class="section level3">
 <h3>Zero Result Rate</h3>
-<p><strong>Random Forest: </strong> Overall accuracy of test set is 0.7056147, AUC is 0.7172. The confusion matrix is:</p>
+<p><strong>Random Forest</strong>: Overall accuracy of test set is 0.7056147, AUC is 0.7172. The confusion matrix is:</p>
 <table>
 <thead>
 <tr class="header">
 <th align="left"></th>
-<th align="left">some results</th>
-<th align="left">zero results</th>
-<th align="left">class error</th>
+<th align="right">some results</th>
+<th align="right">zero results</th>
+<th align="right">class error</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td align="left">some results</td>
-<td align="left">91057</td>
-<td align="left">36474</td>
-<td align="left">0.2860011</td>
+<td align="right">91057</td>
+<td align="right">36474</td>
+<td align="right">0.2860011</td>
 </tr>
 <tr class="even">
 <td align="left">zero results</td>
-<td align="left">6750</td>
-<td align="left">12547</td>
-<td align="left">0.3497953</td>
+<td align="right">6750</td>
+<td align="right">12547</td>
+<td align="right">0.3497953</td>
 </tr>
 </tbody>
 </table>
-<p>The following variable importance plot shows that “has even double quotes” and “is only punctuation and spaces” are more important than others when predicting zero result.</p>
+<p>The following variable importance plot (Fig. 4) shows that “has even double quotes” and “is only punctuation and spaces” are more important than others when predicting zero result.</p>
 <div class="figure">
-<img src="index_files/figure-html/var_imp_zrr.png" alt="" />
-
+<img src="index_files/figure-html/var_imp_zrr.png" alt="Figure 4: (a) Variable importance according to mean decrease in accuracy (increase in prediction error after permuting values of the predictor) specific to zero results queries. (b) Variable importance according to mean decrease in impurity, using Gini index. (c) Variable importance according to mean decrease in accuracy over both classes of queries (zero results and some results)." />
+<p class="caption"><strong>Figure 4</strong>: (a) Variable importance according to mean decrease in accuracy (increase in prediction error after permuting values of the predictor) specific to zero results queries. (b) Variable importance according to mean decrease in impurity, using Gini index. (c) Variable importance according to mean decrease in accuracy over both classes of queries (zero results and some results).</p>
 </div>
-<p><em>(a) Variable importance according to mean decrease in accuracy (increase in prediction error after permuting values of the predictor) specific to zero results queries. (b) Variable importance according to mean decrease in impurity, using Gini index. (c) Variable importance according to mean decrease in accuracy over both classes of queries (zero results and some results).</em></p>
-<p><strong>Logistic Regression: </strong> The two tuned parameter of elasticnet penalty are very closed to 0, which means logistic regression without penalty works best here. Overall accuracy of test set is 0.6946972, AUC is 0.6726. The confusion matrix is:</p>
+<p><strong>Logistic Regression</strong>: The two tuned parameter of elasticnet penalty are very closed to 0, which means logistic regression without penalty works best here. Overall accuracy of test set is 0.6946972, AUC is 0.6726. The confusion matrix is:</p>
 <table>
 <thead>
 <tr class="header">
 <th align="left"></th>
-<th align="left">some results</th>
-<th align="left">zero results</th>
-<th align="left">class error</th>
+<th align="right">some results</th>
+<th align="right">zero results</th>
+<th align="right">class error</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td align="left">some results</td>
-<td align="left">91441</td>
-<td align="left">36090</td>
-<td align="left">0.28299</td>
+<td align="right">91441</td>
+<td align="right">36090</td>
+<td align="right">0.28299</td>
 </tr>
 <tr class="even">
 <td align="left">zero results</td>
-<td align="left">8737</td>
-<td align="left">10560</td>
-<td align="left">0.4527647</td>
+<td align="right">8737</td>
+<td align="right">10560</td>
+<td align="right">0.45276</td>
 </tr>
 </tbody>
 </table>
-<p>The figure below compares the features using the measures from both models to reveal which features the two models agree on. As before, we should pay more attention to MDA specific to queries with zero results. We can see that “has even double quotes” and “is only punctuation and spaces” are relatively more important and make zero result more likely.</p>
+<p>Fig. 5 below compares the features using the measures from both models to reveal which features the two models agree on. As before, we should pay more attention to MDA specific to queries with zero results. We can see that “has even double quotes” and “is only punctuation and spaces” are relatively more important and make zero result more likely.</p>
 <div class="figure">
-<img src="index_files/figure-html/mda_logitcoef_zrr.png" alt="" />
-
+<img src="index_files/figure-html/mda_logitcoef_zrr.png" alt="Figure 5: A scatter map of features with respect to variable importance (via relative mean decrease metrics) and logistic regression coefficient estimates. Each of the 4 plots is divided into quadrants according to how important or unimportant the feature is in random forest classification and whether a query having the feature is more or less likely to yield zero results." />
+<p class="caption"><strong>Figure 5</strong>: A scatter map of features with respect to variable importance (via relative mean decrease metrics) and logistic regression coefficient estimates. Each of the 4 plots is divided into quadrants according to how important or unimportant the feature is in random forest classification and whether a query having the feature is more or less likely to yield zero results.</p>
 </div>
-<p><em>A scatter map of features with respect to variable importance (via relative mean decrease metrics) and logistic regression coefficient estimates. Each of the 4 plots is divided into quadrants according to how important or unimportant the feature is in random forest classification and whether a query having the feature is more or less likely to yield zero results.</em></p>
 </div>
 <div id="clickthrough-rate" class="section level3">
 <h3>Clickthrough Rate</h3>
@@ -346,23 +346,23 @@ $(function() {
 <thead>
 <tr class="header">
 <th align="left"></th>
-<th align="left">zero click</th>
-<th align="left">clickthrough</th>
-<th align="left">class error</th>
+<th align="right">zero click</th>
+<th align="right">clickthrough</th>
+<th align="right">class error</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td align="left">zero click</td>
-<td align="left">23986</td>
-<td align="left">61909</td>
-<td align="left">0.7207521</td>
+<td align="right">23986</td>
+<td align="right">61909</td>
+<td align="right">0.7207521</td>
 </tr>
 <tr class="even">
 <td align="left">clickthrough</td>
-<td align="left">9444</td>
-<td align="left">32061</td>
-<td align="left">0.2275389</td>
+<td align="right">9444</td>
+<td align="right">32061</td>
+<td align="right">0.2275389</td>
 </tr>
 </tbody>
 </table>
@@ -371,42 +371,43 @@ $(function() {
 <thead>
 <tr class="header">
 <th align="left"></th>
-<th align="left">zero click</th>
-<th align="left">clickthrough</th>
-<th align="left">class error</th>
+<th align="right">zero click</th>
+<th align="right">clickthrough</th>
+<th align="right">class error</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td align="left">zero click</td>
-<td align="left">35255</td>
-<td align="left">50640</td>
-<td align="left">0.589557</td>
+<td align="right">35255</td>
+<td align="right">50640</td>
+<td align="right">0.589557</td>
 </tr>
 <tr class="even">
 <td align="left">clickthrough</td>
-<td align="left">15594</td>
-<td align="left">25911</td>
-<td align="left">0.3757138</td>
+<td align="right">15594</td>
+<td align="right">25911</td>
+<td align="right">0.375714</td>
 </tr>
 </tbody>
 </table>
-<p>Because AUC is too closed to 0.5, and the class error for zero click is too large, we don’t think query features have large enough predicting power on clickthrough rate and thus not reporting variable importance here (see appendix below).</p>
+<p>Because AUC is too close to 0.5, and the class error for zero click is too large, we do not think query features have large enough predictive power on clickthrough rate, and thus we are not reporting variable importance here (see appendix below).</p>
 </div>
 <div id="paulscore" class="section level3">
 <h3>PaulScore</h3>
-<p><strong>Linear Regression: </strong> We fit linear regression models (lambda of elasticnet penalty is very closed to 0) for PaulScore when scoring factor equals 0,1, 0.5 and 0.9. The explained deviance by models are very small, less than 0.3%, and R squared ranges from 0.005 to 0.009. Therefore, we don’t think query features have large enough predicting power on PaulScore and thus not reporting variable importance here.</p>
+<p><strong>Linear Regression: </strong> We fit linear regression models (lambdas of elasticnet penalty are very close to 0) for PaulScore when scoring factor equals 0,1, 0.5 and 0.9. The explained deviance by models are very small, less than 0.3%, and R squared ranges from 0.005 to 0.009. Therefore, we do not think query features have enough predictive power on PaulScore, and thus we are not reporting variable importance here.</p>
+<p><strong>Random Forest: </strong> Random forest regression did a little bit better than linear regression, but the performance measures are still too small: The R squared of test set are 0.014, 0.011 and 0.0013, the mean squared errors are 0.986, 0.989 and 0.999, for PaulScore when scoring factor equals 0,1, 0.5 and 0.9 respectively. Therefore, we do not think query features have enough predictive power on PaulScore, and thus we are not reporting variable importance here.</p>
 </div>
 </div>
 <div id="appendix" class="section level2">
 <h2>Appendix</h2>
 <div class="figure">
-<img src="index_files/figure-html/var_imp_ctr.png" alt="" />
-
+<img src="index_files/figure-html/var_imp_ctr.png" alt="Figure 6: (a) Variable importance according to mean decrease in accuracy (increase in prediction error after permuting values of the predictor) specific to zero click queries. (b) Variable importance according to mean decrease in impurity, using Gini index. (c) Variable importance according to mean decrease in accuracy over both classes of queries (zero click and clickthrough)." />
+<p class="caption"><strong>Figure 6</strong>: (a) Variable importance according to mean decrease in accuracy (increase in prediction error after permuting values of the predictor) specific to zero click queries. (b) Variable importance according to mean decrease in impurity, using Gini index. (c) Variable importance according to mean decrease in accuracy over both classes of queries (zero click and clickthrough).</p>
 </div>
 <div class="figure">
-<img src="index_files/figure-html/mda_logitcoef_ctr.png" alt="" />
-
+<img src="index_files/figure-html/mda_logitcoef_ctr.png" alt="Figure 7: A scatter map of features with respect to variable importance (via relative mean decrease metrics) and logistic regression coefficient estimates. Each of the 4 plots is divided into quadrants according to how important or unimportant the feature is in random forest classification and whether a query having the feature is more or less likely to yield at least one click." />
+<p class="caption"><strong>Figure 7</strong>: A scatter map of features with respect to variable importance (via relative mean decrease metrics) and logistic regression coefficient estimates. Each of the 4 plots is divided into quadrants according to how important or unimportant the feature is in random forest classification and whether a query having the feature is more or less likely to yield at least one click.</p>
 </div>
 </div>
 
@@ -423,6 +424,7 @@ $(function() {
 $(document).ready(function () {
   $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
 });
+
 
 </script>
 
