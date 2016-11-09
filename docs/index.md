@@ -4,6 +4,7 @@
 <a href = 'https://meta.wikimedia.org/wiki/User:MPopov_(WMF)'>Mikhail Popov</a> (Review)  
 <a href = 'https://meta.wikimedia.org/wiki/User:EBernhardson_(WMF)'>Erik Bernhardson</a> (Review)  
 <a href = 'https://meta.wikimedia.org/wiki/User:TJones_(WMF)'>Trey Jones</a> (Review)  
+<a href = 'https://www.mediawiki.org/wiki/User:DCausse_(WMF)'>David Causse</a> (Review)  
 `r as.character(Sys.Date(), '%d %B %Y')`  
 <!-- See: http://rmarkdown.rstudio.com/authoring_knitr_engines.html#javascript -->
 <script type="text/javascript">

@@ -4,7 +4,7 @@ This codebase contains the code used to investigate the relationship between que
 
 - **Data Retrieval:** `data_wTSS2.R`, `eventlog_to_hive.hql`
 - **Data Refining:** `refine_wTSS2.R`
-- **Exploratory Data Analysis:** `eda_wTSS2.R`
+- **Exploratory Data Analysis:** `eda_wTSS2.R`, `eda2_wTSS2.R`
 - **Random Forest:** `wTSS2_RF.R`, `randomforest.R`
 - **GLM with Elasticnet Penalty:** `wTSS2_reg.R`
-- **Model Agreement** `map_imp_coef.R`
+- **Model Agreement:** `map_imp_coef.R`

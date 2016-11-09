@@ -2,7 +2,7 @@ events <- events[!duplicated(events$event_id),]
 queries <- queries[!duplicated(queries),]
 queries <- queries[queries$features!="NULL",]
 
-queries <- queries[queries$ip!="164.132.183.164", , ]
+queries <- queries[queries$ip!="xxx.xxx.xxx.xxx", , ]
 lang_proj <- polloi::parse_wikiid(queries$wikiid)
 inactive_lang <- names(table(lang_proj$language))[table(lang_proj$language) <= 50]
 inactive_proj <- names(table(lang_proj$project))[table(lang_proj$project) <= 50]

@@ -213,7 +213,7 @@ p <- searches[, j = list(searches = .N), by = c("language", "zero_result")] %>%
   ggthemes::theme_tufte(base_family = "Gill Sans", base_size = 14) +
   theme(legend.position = "bottom") +
   ggtitle("Zero results rate in top 20 languages by volume of searches",
-          subtitle = paste(fig_subtitle, "on", as.character(head(searches$date, 1), format = "%a (%d %b %Y)")))
+          subtitle = paste(fig_subtitle))
 print(p)
 ggsave("zrr_by_language.png", p, path = fig_path, units = "in", dpi = 150, height = 10, width = 10)
 rm(p)
