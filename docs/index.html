@@ -16,7 +16,7 @@
 <meta name="author" content="Trey Jones (Review)" />
 <meta name="author" content="David Causse (Review)" />
 
-<meta name="date" content="2016-11-09" />
+<meta name="date" content="2016-11-14" />
 
 <title>Query Features and Search Performance</title>
 
@@ -213,14 +213,13 @@ div.tocify {
 
 
 <h1 class="title toc-ignore">Query Features and Search Performance</h1>
-<h3 class="subtitle"><em>Third Draft</em></h3>
 <h4 class="author"><em><a href = 'https://meta.wikimedia.org/wiki/User:CXie_(WMF)'>Chelsy Xie</a> (Analysis &amp; Report)</em></h4>
 <h4 class="author"><em><a href = 'https://meta.wikimedia.org/wiki/User:DTankersley_(WMF)'>Deb Tankersley</a> (Product Management)</em></h4>
 <h4 class="author"><em><a href = 'https://meta.wikimedia.org/wiki/User:MPopov_(WMF)'>Mikhail Popov</a> (Review)</em></h4>
 <h4 class="author"><em><a href = 'https://meta.wikimedia.org/wiki/User:EBernhardson_(WMF)'>Erik Bernhardson</a> (Review)</em></h4>
 <h4 class="author"><em><a href = 'https://meta.wikimedia.org/wiki/User:TJones_(WMF)'>Trey Jones</a> (Review)</em></h4>
 <h4 class="author"><em><a href = 'https://www.mediawiki.org/wiki/User:DCausse_(WMF)'>David Causse</a> (Review)</em></h4>
-<h4 class="date"><em>09 November 2016</em></h4>
+<h4 class="date"><em>14 November 2016</em></h4>
 
 </div>
 
@@ -239,7 +238,7 @@ $(function() {
 });
 </script>
 <p>
-{ <a href="https://github.com/wikimedia-research/Discovery-Search-QueryFeatures-201610/blob/master/docs/index.Rmd">RMarkdown Source</a> | <a href="https://github.com/wikimedia-research/Discovery-Search-QueryFeatures-201610">Analysis Codebase</a> }
+{ <a href="https://github.com/wikimedia-research/Discovery-Search-QueryFeatures-201610/blob/master/docs/index.Rmd">RMarkdown Source</a> | <a href="https://github.com/wikimedia-research/Discovery-Search-QueryFeatures-201610">Analysis Codebase</a> | <a href="https://commons.wikimedia.org/wiki/File%3AQuery_Features_and_Search_Performance.pdf">PDF Version</a> }
 </p>
 <div id="executive-summary" class="section level2">
 <h2>Executive Summary</h2>
@@ -312,7 +311,7 @@ $(function() {
 <img src="index_files/figure-html/var_imp_zrr.png" alt="Figure 4: (a) Variable importance according to mean decrease in accuracy (increase in prediction error after permuting values of the predictor) specific to zero results queries. (b) Variable importance according to mean decrease in impurity, using Gini index. (c) Variable importance according to mean decrease in accuracy over both classes of queries (zero results and some results)." />
 <p class="caption"><strong>Figure 4</strong>: (a) Variable importance according to mean decrease in accuracy (increase in prediction error after permuting values of the predictor) specific to zero results queries. (b) Variable importance according to mean decrease in impurity, using Gini index. (c) Variable importance according to mean decrease in accuracy over both classes of queries (zero results and some results).</p>
 </div>
-<p><strong>Logistic Regression</strong>: The two tuned parameter of elasticnet penalty are very closed to 0, which means logistic regression without penalty works best here. Overall accuracy of test set is 0.6946972, AUC is 0.6726. The confusion matrix is:</p>
+<p><strong>Logistic Regression</strong>: The two tuned parameter of elastic net penalty are very closed to 0, which means logistic regression without penalty works best here. Overall accuracy of test set is 0.6946972, AUC is 0.6726. The confusion matrix is:</p>
 <table>
 <thead>
 <tr class="header">
@@ -399,7 +398,7 @@ $(function() {
 </div>
 <div id="paulscore" class="section level3">
 <h3>PaulScore</h3>
-<p><strong>Linear Regression: </strong> We fit linear regression models (lambdas of elasticnet penalty are very close to 0) for PaulScore when scoring factor equals 0,1, 0.5 and 0.9. The explained deviance by models are very small, less than 0.3%, and R squared ranges from 0.005 to 0.009. Therefore, we do not think query features have enough predictive power on PaulScore, and thus we are not reporting variable importance here.</p>
+<p><strong>Linear Regression: </strong> We fit linear regression models (lambdas of elastic net penalty are very close to 0) for PaulScore when scoring factor equals 0,1, 0.5 and 0.9. The explained deviance by models are very small, less than 0.3%, and R squared ranges from 0.005 to 0.009. Therefore, we do not think query features have enough predictive power on PaulScore, and thus we are not reporting variable importance here.</p>
 <p><strong>Random Forest: </strong> Random forest regression did a little bit better than linear regression, but the performance measures are still too small: The R squared of test set are 0.014, 0.011 and 0.0013, the mean squared errors are 0.986, 0.989 and 0.999, for PaulScore when scoring factor equals 0,1, 0.5 and 0.9 respectively. Therefore, we do not think query features have enough predictive power on PaulScore, and thus we are not reporting variable importance here.</p>
 </div>
 </div>

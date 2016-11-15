@@ -19,7 +19,7 @@ $(function() {
   });
 });
 </script>
-<p>{ <a href="https://github.com/wikimedia-research/Discovery-Search-QueryFeatures-201610/blob/master/docs/index.Rmd">RMarkdown Source</a> | <a href="https://github.com/wikimedia-research/Discovery-Search-QueryFeatures-201610">Analysis Codebase</a> }</p>
+<p>{ <a href="https://github.com/wikimedia-research/Discovery-Search-QueryFeatures-201610/blob/master/docs/index.Rmd">RMarkdown Source</a> | <a href="https://github.com/wikimedia-research/Discovery-Search-QueryFeatures-201610">Analysis Codebase</a> | <a href="https://commons.wikimedia.org/wiki/File%3AQuery_Features_and_Search_Performance.pdf">PDF Version</a> }</p>
 
 
 ## Executive Summary
@@ -79,7 +79,7 @@ The following variable importance plot (Fig. 4) shows that "has even double quot
 
 ![**Figure 4**: (a) Variable importance according to mean decrease in accuracy (increase in prediction error after permuting values of the predictor) specific to zero results queries. (b) Variable importance according to mean decrease in impurity, using Gini index. (c) Variable importance according to mean decrease in accuracy over both classes of queries (zero results and some results).](index_files/figure-html/var_imp_zrr.png)
 
-**Logistic Regression**: The two tuned parameter of elasticnet penalty are very closed to 0, which means logistic regression without penalty works best here. Overall accuracy of test set is 0.6946972, AUC is 0.6726. The confusion matrix is:
+**Logistic Regression**: The two tuned parameter of elastic net penalty are very closed to 0, which means logistic regression without penalty works best here. Overall accuracy of test set is 0.6946972, AUC is 0.6726. The confusion matrix is:
 
 |              | some results | zero results | class error |
 |:-------------|-------------:|-------------:|------------:|
@@ -110,7 +110,7 @@ Because AUC is too close to 0.5, and the class error for zero click is too large
 
 ### PaulScore
 
-**Linear Regression: ** We fit linear regression models (lambdas of elasticnet penalty are very close to 0) for PaulScore when scoring factor equals 0,1, 0.5 and 0.9. The explained deviance by models are very small, less than 0.3%, and R squared ranges from 0.005 to 0.009. Therefore, we do not think query features have enough predictive power on PaulScore, and thus we are not reporting variable importance here.
+**Linear Regression: ** We fit linear regression models (lambdas of elastic net penalty are very close to 0) for PaulScore when scoring factor equals 0,1, 0.5 and 0.9. The explained deviance by models are very small, less than 0.3%, and R squared ranges from 0.005 to 0.009. Therefore, we do not think query features have enough predictive power on PaulScore, and thus we are not reporting variable importance here.
 
 **Random Forest: ** Random forest regression did a little bit better than linear regression, but the performance measures are still too small: The R squared of test set are 0.014, 0.011 and 0.0013, the mean squared errors are 0.986, 0.989 and 0.999, for PaulScore when scoring factor equals 0,1, 0.5 and 0.9 respectively. Therefore, we do not think query features have enough predictive power on PaulScore, and thus we are not reporting variable importance here.
 
